@@ -1,0 +1,3 @@
+/home/znati/Documents/infoStealer/test2/build/CMakeFiles/spyguino.dir
+/home/znati/Documents/infoStealer/test2/build/CMakeFiles/edit_cache.dir
+/home/znati/Documents/infoStealer/test2/build/CMakeFiles/rebuild_cache.dir
