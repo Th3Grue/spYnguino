@@ -6,18 +6,17 @@
 struct SystemProfile
 {
     std::string user;
+    std::string sudouser;
+    std::string tablaenrutamiento;
     std::string kernelVersion;
     std::string distro;
     std::string ip;
     std::string ip_publica;
+    std::string etcpasswd;
 };
 
 // Declaraciones de funciones
 SystemProfile systemprofile();
-std::string readIp();
-std::string readDistro();
-std::string readKernelVersion();
-std::string readUser();
-std::string readPublicIp();
+std::string runCommand;
 
 #endif // SPYGUINO_H

